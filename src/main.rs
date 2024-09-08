@@ -10,12 +10,11 @@ use tracing::info;
 mod config;
 mod handlers;
 
-pub struct Connections {
+pub struct AppState {
     client: Client,
-    // TODO: Define DB connection state here
 }
 
-impl Connections {
+impl AppState {
     pub fn new() -> Self {
         let config = config::Config::init_from_env().unwrap();
         let client = Client::new(config.influx_url, config.influx_db);
@@ -29,11 +28,12 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     // Set up InfluxDB Client and store as shared state
-    let state = Arc::new(Connections::new());
+    let state = Arc::new(AppState::new());
+
     let app = Router::new()
-        // Ping DB test
         .route("/ping", get(handlers::ping_db))
-        .route("/data", get(handlers::get_data))
+        .route("/sample_data", get(handlers::get_sample_data))
+        .route("/device_summaries", get(handlers::get_device_summaries))
         .with_state(state)
         .fallback(handlers::handler_404);
 
