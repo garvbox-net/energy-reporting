@@ -5,7 +5,7 @@ use axum::{extract::State, http::StatusCode, response::Json};
 use influxdb::ReadQuery;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tracing;
+
 type JsonWithResponseCode = (StatusCode, Json<Value>);
 
 pub async fn handler_404() -> JsonWithResponseCode {
@@ -42,9 +42,9 @@ pub async fn get_data(State(state): State<Arc<Connections>>) -> Json<Value> {
             "SELECT friendly_name, value FROM W WHERE time >= now() - 1h",
         ))
         .await
-        .and_then(|mut result| {
+        .map(|mut result| {
             tracing::info!("Query OK");
-            Ok(result.deserialize_next::<PowerStat>().unwrap())
+            result.deserialize_next::<PowerStat>().unwrap()
         });
     let results = query_res.unwrap();
     let data: Vec<PowerStat> = results.series.into_iter().flat_map(|s| s.values).collect();

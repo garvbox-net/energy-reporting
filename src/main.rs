@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use axum::{routing::get, Router, Server};
+use axum::{routing::get, Router};
 use dotenv::dotenv;
 use envconfig::Envconfig;
 use influxdb::Client;
+use tokio::net::TcpListener;
 use tracing::info;
-use tracing_subscriber;
 
 mod config;
 mod handlers;
@@ -27,6 +27,7 @@ impl Connections {
 async fn main() {
     dotenv().ok();
     tracing_subscriber::fmt::init();
+
     // Set up InfluxDB Client and store as shared state
     let state = Arc::new(Connections::new());
     let app = Router::new()
@@ -35,9 +36,12 @@ async fn main() {
         .route("/data", get(handlers::get_data))
         .with_state(state)
         .fallback(handlers::handler_404);
+
     info!("Starting server...");
-    Server::bind(&"0.0.0.0:8000".parse().unwrap())
-        .serve(app.into_make_service())
+    let listener = TcpListener::bind("0.0.0.0:8000")
         .await
-        .expect("Server failed to start")
+        .expect("Failed to bind listener");
+    axum::serve(listener, app)
+        .await
+        .expect("Failed to start axum server");
 }
