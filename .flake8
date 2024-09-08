@@ -1,3 +1,0 @@
-[flake8]
-extend-ignore = S404, S603
-max-line-length = 100

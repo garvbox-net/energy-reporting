@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: app
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      INFLUX_URL: ${INFLUX_URL:-http://influxdb:8086}
+      INFLUX_DB: ${INFLUX_DB:-mydb}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:password@db:5432/mydb}
+
+volumes:
+  db-data:

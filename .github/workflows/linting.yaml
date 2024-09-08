@@ -1,42 +1,23 @@
-name: Python Linting Checks
-
-on:
-  pull_request:
+name: Linting Checks
+on: [push, pull_request]
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Python
-        id: setup-python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.4.0
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
-
-      # Run Linting Commands: black, flake8 and isort
-      - name: Check Formatting with black
-        run: poetry run black --check --verbose energy_reporting scripts
-      - name: Check Import order
-        run: poetry run isort -c --profile black energy_reporting scripts/
-      - name: Lint with flake8
-        run: poetry run flake8 energy_reporting scripts
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt -- --check
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all --tests --all-features --no-deps

@@ -8,18 +8,15 @@ repos:
       - id: check-added-large-files
   - repo: local
     hooks:
-      - id: black
-        name: black
+      - id: cargo-fmt
+        name: Cargo Fmt
         language: system
-        types: [python]
-        entry: poetry run black --check
-      - id: flake8
-        name: flake8
+        types: [rust]
+        entry: cargo fmt -- --check
+        pass_filenames: false
+      - id: cargo-clippy
+        name: Clippy
         language: system
-        types: [python]
-        entry: poetry run flake8
-      - id: isort
-        name: isort
-        language: system
-        types: [python]
-        entry: poetry run isort -c --profile black
+        types: [rust]
+        entry: cargo clippy --all --tests --all-features --no-deps
+        pass_filenames: false
